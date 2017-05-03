@@ -7,13 +7,4 @@
     android:layout_height="match_parent"
     tools:context="com.eit2017.kj.exitguide.MainActivity">
 
-    <TextView
-        android:id="@+id/tvDirection"
-        android:layout_width="174dp"
-        android:layout_height="89dp"
-        android:text="0.0"
-        android:textSize="64sp"
-        tools:layout_editor_absoluteX="121dp"
-        tools:layout_editor_absoluteY="146dp" />
-
 </android.support.constraint.ConstraintLayout>
