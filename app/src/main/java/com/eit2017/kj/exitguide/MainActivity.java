@@ -25,6 +25,10 @@ public class MainActivity extends Activity implements SensorEventListener {
     TextView tvDirection;
     private TextView textSpoken;
     private Button buttonSpeak;
+    private Button buttonNextStep;
+
+    String roomNumber = "Room 204";
+
     private final int REQ_CODE_SPEECH_INPUT = 100;
 
     @Override
@@ -39,12 +43,25 @@ public class MainActivity extends Activity implements SensorEventListener {
         buttonSpeak = (Button) findViewById(R.id.buttonSpeak);
         textSpoken = (TextView) findViewById(R.id.textSpoken);
 
+        //next step <-- button
+        buttonNextStep = (Button) findViewById(R.id.buttonNextStep);
+
         buttonSpeak.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 speechInput();
             }
         });
+
+        buttonNextStep.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent Intent = new Intent(view.getContext(), dummy.class);
+                Intent.putExtra("my_key",roomNumber);
+                view.getContext().startActivity(Intent);
+            }
+        });
+
     }
 
     private void speechInput() {
@@ -79,6 +96,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     textSpoken.setText(result.get(0));
+                    roomNumber = result.get(0);
                 }
                 break;
             }
