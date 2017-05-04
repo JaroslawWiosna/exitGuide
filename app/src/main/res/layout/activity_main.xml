@@ -7,19 +7,6 @@
     android:layout_height="match_parent"
     tools:context="com.eit2017.kj.exitguide.MainActivity">
 
-    <TextView
-        android:id="@+id/tvDirection"
-        android:layout_width="174dp"
-        android:layout_height="89dp"
-        android:text="0.0"
-        android:textSize="64sp"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="8dp"
-        android:layout_marginLeft="8dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginRight="8dp"
-        app:layout_constraintRight_toRightOf="parent" />
-
     <Button
         android:id="@+id/buttonSpeak"
         android:layout_width="wrap_content"

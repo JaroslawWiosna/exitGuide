@@ -1,12 +1,9 @@
 package com.eit2017.kj.exitguide;
 
 import android.app.Activity;
+
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -19,10 +16,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class MainActivity extends Activity implements SensorEventListener {
 
-    private SensorManager mSensorManager;
-    TextView tvDirection;
+
+public class MainActivity extends Activity {
+
     private TextView textSpoken;
     private Button buttonSpeak;
     private Button buttonNextStep;
@@ -35,9 +32,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        tvDirection = (TextView) findViewById(R.id.tvDirection);
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         //SpeechRecognition
         buttonSpeak = (Button) findViewById(R.id.buttonSpeak);
@@ -56,12 +50,11 @@ public class MainActivity extends Activity implements SensorEventListener {
         buttonNextStep.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent Intent = new Intent(view.getContext(), dummy.class);
+                Intent Intent = new Intent(view.getContext(), MapActivity.class);
                 Intent.putExtra("my_key",roomNumber);
                 view.getContext().startActivity(Intent);
             }
         });
-
     }
 
     private void speechInput() {
@@ -115,29 +108,12 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onResume() {
         super.onResume();
 
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
-                SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
-        // to stop the listener and save battery - K: do we need this?
-        mSensorManager.unregisterListener(this);
     }
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
 
-        // get the angle around the z-axis rotated:
-        // 0 - North, 90 - East, 180 - South, 270 - West
-        float degree = Math.round(event.values[0]);
-        tvDirection.setText(Float.toString(degree));
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        //not in use
-    }
 }
