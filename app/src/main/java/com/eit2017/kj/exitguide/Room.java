@@ -4,9 +4,9 @@ public class Room {
 
     String number;
     int id;
-    // Array of existing doors at North, West, South and East wall
+    // Array of existing doors at North, East, South and West wall
     boolean doors[];
-    // Array of existing neighbours behind North, West, South and East wall
+    // Array of existing neighbours behind North, East, South and West wall
     int neighbours[];
 
     Room()

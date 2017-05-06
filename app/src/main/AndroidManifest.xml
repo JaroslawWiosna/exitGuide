@@ -17,8 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MapActivity"
-            android:screenOrientation="portrait"></activ
-            ity>
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

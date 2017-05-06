@@ -71,24 +71,28 @@ public class MapActivity extends Activity implements SensorEventListener {
         RoomsFactory.generateSampleMap();
         //loop for finding the proper room
 
+
         // ### pass id of current room
         currentRoom = FloorPlan.getInstance().getRoomMap().get(12);
 
-        printMap();
     }
 
     // Prototyped function for printing the nearest neighbours of current location
-    private void printMap() {
+    private void printMap(Direction dir) {
         int[] centerParams = choosePicture(currentRoom);
         imageCenter.setImageResource(centerParams[0]);
-        imageCenter.setRotation(centerParams[1]);
+        imageCenter.setRotation(centerParams[1] + dir.index*90);
         for (int i=0 ;i<4; i++) {
             Room neighbour = FloorPlan.getInstance().getRoomMap().get(currentRoom.neighbours[i]);
             int[] params = choosePicture(neighbour);
-            surroundings[i*2].setImageResource(params[0]);
-            surroundings[i*2].setRotation(params[1]);
-        }
+            surroundings[(i*2 + dir.index*2)%8].setImageResource(params[0]);
+            surroundings[(i*2 + dir.index*2)%8].setRotation(params[1] + dir.index*90);
 
+            Room nextNeighbour = FloorPlan.getInstance().getRoomMap().get(neighbour.neighbours[(i+1)%4]);
+            int[] nextParams = choosePicture(nextNeighbour);
+            surroundings[(i*2+1 + dir.index*2)%8].setImageResource(nextParams[0]);
+            surroundings[(i*2+1 + dir.index*2)%8].setRotation(nextParams[1] + dir.index*90);
+        }
     }
 
     // Choose a proper rotated room image
@@ -202,6 +206,19 @@ public class MapActivity extends Activity implements SensorEventListener {
 
         // ### tvDirection - will be deleted in final version
         tvDirection.setText(Float.toString(degree));
+
+        if (degree > 315 || degree < 45) {
+            printMap(Direction.North);
+        }
+        else if (degree >=45 && degree <= 135) {
+            printMap(Direction.West);
+        }
+        else if (degree > 135 && degree <= 225) {
+            printMap(Direction.South);
+        }
+        else if (degree > 225 && degree <= 315) {
+            printMap(Direction.East);
+        }
     }
 
     @Override
