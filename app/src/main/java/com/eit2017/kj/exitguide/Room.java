@@ -3,15 +3,15 @@ package com.eit2017.kj.exitguide;
 public class Room {
 
     String number;
-    int id;
+    Integer id;
     // Array of existing doors at North, East, South and West wall
     boolean doors[];
     // Array of existing neighbours behind North, East, South and West wall
     int neighbours[];
 
-    Room()
+    Room(String inNumber)
     {
-        number = "";
+        number = inNumber;
         doors = new boolean[4];
         neighbours = new int[4];
         for (int i=0; i<4; i++) {
