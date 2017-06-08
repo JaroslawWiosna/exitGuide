@@ -1,5 +1,8 @@
 package com.eit2017.kj.exitguide;
 
+import android.widget.Toast;
+import android.content.Context;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,5 +32,14 @@ public class FloorPlan {
 
     public Map<Integer, Room> getRoomMap() {
         return roomMap;
+    }
+
+    public Integer getRoomIdFromRoomNumber(String roomNumber) {
+        for (Map.Entry<Integer, Room> entry : roomMap.entrySet()) {
+            if (entry.getValue().number == roomNumber) {
+                return entry.getValue().id;
+            }
+        }
+        return -1;
     }
 }

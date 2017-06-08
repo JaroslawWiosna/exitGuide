@@ -7,15 +7,14 @@ import android.content.Intent;
 
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
-import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.Locale;
-
 
 
 public class MainActivity extends Activity {
@@ -24,7 +23,9 @@ public class MainActivity extends Activity {
     private Button buttonSpeak;
     private Button buttonNextStep;
 
-    String roomNumber = "Room 204";
+    Map<Integer,Room> roomMap;
+    String roomNumber;
+    Integer roomId = -1;
 
     private final int REQ_CODE_SPEECH_INPUT = 100;
 
@@ -32,6 +33,9 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //create proper map
+        RoomsFactory.generateSampleMap();
 
         //SpeechRecognition
         buttonSpeak = (Button) findViewById(R.id.buttonSpeak);
@@ -50,9 +54,14 @@ public class MainActivity extends Activity {
         buttonNextStep.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent Intent = new Intent(view.getContext(), MapActivity.class);
-                Intent.putExtra("my_key",roomNumber);
-                view.getContext().startActivity(Intent);
+                if (roomId != -1) {
+                    Intent Intent = new Intent(view.getContext(), MapActivity.class);
+                    Intent.putExtra("roomId", roomNumber);
+                    view.getContext().startActivity(Intent);
+                }
+                else {
+                    //"WRONG" no such room
+                }
             }
         });
     }
@@ -89,21 +98,25 @@ public class MainActivity extends Activity {
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     textSpoken.setText(result.get(0));
-                    roomNumber = result.get(0);
+                    roomNumber = result.get(0).toString();
+                    roomNumber = roomNumber.replace(" ", "");
                 }
                 break;
             }
 
         }
+
+        //function for finding the proper room
+        roomMap = FloorPlan.getInstance().getRoomMap();
+        for (Map.Entry<Integer, Room> entry : roomMap.entrySet()) {
+            if (entry.getValue().number.equalsIgnoreCase(roomNumber)) {
+                roomId = entry.getValue().id;
+            }
+        }
+
+        textSpoken.setText(roomId.toString());
     }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-*/
+
     @Override
     protected void onResume() {
         super.onResume();

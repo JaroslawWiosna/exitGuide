@@ -1,6 +1,8 @@
 package com.eit2017.kj.exitguide;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -9,17 +11,26 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import static java.lang.Thread.sleep;
 
 public class MapActivity extends Activity implements SensorEventListener {
 
+    //sensors
     private SensorManager mSensorManager;
-    String RoomNumber;
-    Room currentRoom;
 
     // ### tvDirection - will be deleted in final version
     TextView tvDirection;
+
+    Integer roomId;
+    Room currentRoom;
 
     ImageView imageCenter;
     ImageView imageFront;
@@ -34,17 +45,65 @@ public class MapActivity extends Activity implements SensorEventListener {
     // Array of displayed rooms around of current room
     ImageView[] surroundings;
 
+    //Bluetooth thread
+    Runnable runnable = new Runnable() {
+        private BluetoothAdapter BTAdapter = BluetoothAdapter.getDefaultAdapter();
+        public void run() {
+            registerReceiver(receiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+
+            while(true){
+                discoverDevices();
+                try {
+                    sleep(1000);
+                }
+                catch (Exception e) {
+                }
+            }
+        }
+
+        //Bluetooth functionality
+        public void cancelDiscovery() {
+            if (BTAdapter.isDiscovering()) BTAdapter.cancelDiscovery();
+        }
+
+        public void discoverDevices() {
+            if (BTAdapter.isDiscovering()) {
+                cancelDiscovery();
+                try {
+                    sleep(100);
+                }
+                catch (Exception e) {
+
+                }
+                BTAdapter.startDiscovery();
+            } else {
+                BTAdapter.startDiscovery();
+            }
+        }
+
+        private final BroadcastReceiver receiver = new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if(BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    int  rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
+                    String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
+                    Toast.makeText(getApplicationContext(), name + "==>" + rssi + "dBm", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
+        //sensors init
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         // ### tvDirection - will be deleted in final version
         tvDirection = (TextView) findViewById(R.id.tvDirection);
-
-        surroundings = new ImageView[8];
 
         imageCenter  = (ImageView) findViewById(R.id.imageCenter);
         imageFront = (ImageView) findViewById(R.id.imageFront);
@@ -56,6 +115,7 @@ public class MapActivity extends Activity implements SensorEventListener {
         imageBR = (ImageView) findViewById(R.id.imageBR);
         imageBL = (ImageView) findViewById(R.id.imageBL);
 
+        surroundings = new ImageView[8];
         surroundings[0] = imageFront;
         surroundings[1] = imageFR;
         surroundings[2] = imageRight;
@@ -66,15 +126,11 @@ public class MapActivity extends Activity implements SensorEventListener {
         surroundings[7] = imageFL;
 
         Intent i = getIntent();
-        RoomNumber = i.getStringExtra("my_key");
+        roomId = Integer.parseInt(i.getStringExtra("roomId"));
+        currentRoom = FloorPlan.getInstance().getRoomMap().get(roomId);
 
-        RoomsFactory.generateSampleMap();
-        //loop for finding the proper room
-
-
-        // ### pass id of current room
-        currentRoom = FloorPlan.getInstance().getRoomMap().get(12);
-
+        Thread bluetoothThread = new Thread(runnable);
+        bluetoothThread.start();
     }
 
     // Prototyped function for printing the nearest neighbours of current location
