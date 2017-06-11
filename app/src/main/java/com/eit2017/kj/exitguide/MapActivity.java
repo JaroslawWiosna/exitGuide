@@ -19,6 +19,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Map;
+
 import static java.lang.Thread.sleep;
 
 public class MapActivity extends Activity implements SensorEventListener {
@@ -126,11 +128,23 @@ public class MapActivity extends Activity implements SensorEventListener {
         surroundings[7] = imageFL;
 
         Intent i = getIntent();
-        roomId = Integer.parseInt(i.getStringExtra("roomId"));
+        roomId = Integer.parseInt(i.getStringExtra("roomID"));
+//      The following 3 lines for debug only...
+//        FloorPlan fp = FloorPlan.getInstance();
+//        Map<Integer,Room> fpmap = fp.getRoomMap();
+//        currentRoom = fpmap.get(roomId);
         currentRoom = FloorPlan.getInstance().getRoomMap().get(roomId);
 
+        if (currentRoom == null) {
+            finish();
+            Toast.makeText(getApplicationContext(),
+                    "currentRoom is null, and this is a huge problem",
+                    Toast.LENGTH_SHORT).show();
+        }
         Thread bluetoothThread = new Thread(runnable);
         bluetoothThread.start();
+
+
     }
 
     // Prototyped function for printing the nearest neighbours of current location

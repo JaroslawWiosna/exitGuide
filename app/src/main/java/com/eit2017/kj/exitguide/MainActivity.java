@@ -24,8 +24,8 @@ public class MainActivity extends Activity {
     private Button buttonNextStep;
 
     Map<Integer,Room> roomMap;
-    String roomNumber;
-    Integer roomId = -1;
+    String roomNumber = "12";
+    Integer roomId = 12;
 
     private final int REQ_CODE_SPEECH_INPUT = 100;
 
@@ -55,12 +55,15 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 if (roomId != -1) {
-                    Intent Intent = new Intent(view.getContext(), MapActivity.class);
-                    Intent.putExtra("roomId", roomNumber);
-                    view.getContext().startActivity(Intent);
+                    Intent i = new Intent(MainActivity.this, MapActivity.class);
+                    i.putExtra("roomId", roomNumber);
+                    startActivity(i);
                 }
                 else {
                     //"WRONG" no such room
+                    Toast.makeText(getApplicationContext(),
+                            getString(R.string.no_such_room),
+                            Toast.LENGTH_SHORT).show();
                 }
             }
         });
