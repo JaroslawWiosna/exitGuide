@@ -10,7 +10,7 @@ public class FloorPlan {
 
     private Map<Integer,Room> roomMap;
 
-    private static FloorPlan instance;
+    private static FloorPlan instance = null;
 
     // Assumption that only one Map can be loaded at time
     public static FloorPlan getInstance(){
