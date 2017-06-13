@@ -127,13 +127,33 @@ public class MapActivity extends Activity implements SensorEventListener {
         surroundings[6] = imageLeft;
         surroundings[7] = imageFL;
 
-        Intent i = getIntent();
-        roomId = Integer.parseInt(i.getStringExtra("roomID"));
+//        Intent i = getIntent();
+////        String tmp = i.getStringExtra("roomID_key");
+//        String tmp = i.getExtras().getString("roomId");
+        Bundle b = getIntent().getExtras();
+        String tmp = b.getString("roomId");
+
+        if (tmp == null) {
+            finish();
+            Toast.makeText(getApplicationContext(),
+                    "roomId is null, and this is a huge problem",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        roomId = Integer.parseInt(tmp);
+
+        if (roomId > 14 || roomId < 1) {
+            finish();
+            Toast.makeText(getApplicationContext(),
+                    "such roomId number is not allowed!",
+                    Toast.LENGTH_SHORT).show();
+        }
+
+//      currentRoom = FloorPlan.getInstance().getRoomMap().get(roomId);
 //      The following 3 lines for debug only...
-//        FloorPlan fp = FloorPlan.getInstance();
-//        Map<Integer,Room> fpmap = fp.getRoomMap();
-//        currentRoom = fpmap.get(roomId);
-        currentRoom = FloorPlan.getInstance().getRoomMap().get(roomId);
+        FloorPlan fp = FloorPlan.getInstance();
+        Map<Integer,Room> fpmap = fp.getRoomMap();
+        currentRoom = fpmap.get(roomId);
 
         if (currentRoom == null) {
             finish();
