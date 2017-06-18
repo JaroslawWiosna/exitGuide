@@ -10,7 +10,8 @@
         android:layout_width="368dp"
         android:layout_height="495dp"
         tools:layout_editor_absoluteX="-4dp"
-        tools:layout_editor_absoluteY="8dp">
+        tools:layout_editor_absoluteY="8dp"
+        android:id="@+id/tableLayout">
 
         <TextView
             android:id="@+id/tvDirection"
@@ -97,5 +98,24 @@
                 app:srcCompat="@drawable/empty" />
         </TableRow>
     </TableLayout>
+
+    <TextView
+        android:id="@+id/tvDirectionCardinal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:text="tvDirectionCardinal"
+        app:layout_constraintRight_toRightOf="parent"
+        tools:layout_editor_absoluteY="0dp" />
+
+    <TextView
+        android:id="@+id/shortestPathTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="0dp"
+        android:text="shortest path is notknown yet"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
 
 </android.support.constraint.ConstraintLayout>
