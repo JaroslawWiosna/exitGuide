@@ -15,10 +15,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 
+import android.speech.tts.TextToSpeech;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Locale;
 import java.util.Map;
 
 import static java.lang.Thread.sleep;
@@ -30,6 +32,13 @@ public class MapActivity extends Activity implements SensorEventListener {
 
     // ### tvDirection - will be deleted in final version
     TextView tvDirection;
+    // ### tvDirectionCardinal - will be deleted in final version
+    TextView tvDirectionCardinal;
+
+    TextView shortestPathTextView;
+
+    TextToSpeech tts_test;
+//    tts_test.setLanguage(Locale.US);
 
     Integer roomId;
     Room currentRoom;
@@ -91,6 +100,21 @@ public class MapActivity extends Activity implements SensorEventListener {
                     int  rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
                     Toast.makeText(getApplicationContext(), name + "==>" + rssi + "dBm", Toast.LENGTH_SHORT).show();
+
+                    if (tts_test == null) {
+                        tts_test = new TextToSpeech(getApplicationContext(),
+                                new TextToSpeech.OnInitListener() {
+                                    @Override
+                                    public void onInit(int status) {
+                                        if(status != TextToSpeech.ERROR){
+                                            tts_test.setLanguage(Locale.US);
+                                        }
+                                    }
+                                });
+                    }
+
+//                    tts_test.speak(name, TextToSpeech.QUEUE_ADD, null);
+
                 }
             }
         };
@@ -106,6 +130,19 @@ public class MapActivity extends Activity implements SensorEventListener {
 
         // ### tvDirection - will be deleted in final version
         tvDirection = (TextView) findViewById(R.id.tvDirection);
+        // ### tvDirectionCardinal - will be deleted in final version
+        tvDirectionCardinal = (TextView) findViewById(R.id.tvDirectionCardinal);
+        shortestPathTextView = (TextView) findViewById(R.id.shortestPathTextView);
+
+//        tts_test = new TextToSpeech(getApplicationContext(),
+//                new TextToSpeech.OnInitListener() {
+//                    @Override
+//                    public void onInit(int status) {
+//                        if(status != TextToSpeech.ERROR){
+//                            tts_test.setLanguage(Locale.US);
+//                        }
+//                    }
+//                });
 
         imageCenter  = (ImageView) findViewById(R.id.imageCenter);
         imageFront = (ImageView) findViewById(R.id.imageFront);
@@ -142,13 +179,6 @@ public class MapActivity extends Activity implements SensorEventListener {
 
         roomId = Integer.parseInt(tmp);
 
-        if (roomId > 14 || roomId < 1) {
-            finish();
-            Toast.makeText(getApplicationContext(),
-                    "such roomId number is not allowed!",
-                    Toast.LENGTH_SHORT).show();
-        }
-
 //      currentRoom = FloorPlan.getInstance().getRoomMap().get(roomId);
 //      The following 3 lines for debug only...
         FloorPlan fp = FloorPlan.getInstance();
@@ -164,6 +194,10 @@ public class MapActivity extends Activity implements SensorEventListener {
         Thread bluetoothThread = new Thread(runnable);
         bluetoothThread.start();
 
+        Graph graph = new Graph(fpmap);
+        graph.DFS(roomId);
+
+        shortestPathTextView.setText("Shortest path is... " + graph.shortestPath.toString());
 
     }
 
@@ -299,15 +333,31 @@ public class MapActivity extends Activity implements SensorEventListener {
 
         if (degree > 315 || degree < 45) {
             printMap(Direction.North);
+            tvDirectionCardinal.setText("North");
+            if (tts_test != null) {
+//                tts_test.speak("North!", TextToSpeech.QUEUE_ADD, null);
+            }
         }
         else if (degree >=45 && degree <= 135) {
             printMap(Direction.West);
+            tvDirectionCardinal.setText("West");
+            if (tts_test != null) {
+//                tts_test.speak("West!", TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
         else if (degree > 135 && degree <= 225) {
             printMap(Direction.South);
+            tvDirectionCardinal.setText("South");
+            if (tts_test != null) {
+//                tts_test.speak("South!", TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
         else if (degree > 225 && degree <= 315) {
             printMap(Direction.East);
+            tvDirectionCardinal.setText("East");
+            if (tts_test != null) {
+//                tts_test.speak("East!", TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
     }
 
