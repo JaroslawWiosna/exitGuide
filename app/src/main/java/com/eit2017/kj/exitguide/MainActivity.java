@@ -24,8 +24,8 @@ public class MainActivity extends Activity {
     private Button buttonNextStep;
 
     Map<Integer,Room> roomMap;
-    String roomNumber = "12";
-    Integer roomId = 12;
+    String roomNumber = "8";
+    Integer roomId = 8;
 
     private final int REQ_CODE_SPEECH_INPUT = 100;
 

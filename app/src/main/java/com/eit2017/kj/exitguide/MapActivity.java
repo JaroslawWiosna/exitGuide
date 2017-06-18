@@ -23,6 +23,10 @@ import android.widget.Toast;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.eit2017.kj.exitguide.Direction.East;
+import static com.eit2017.kj.exitguide.Direction.North;
+import static com.eit2017.kj.exitguide.Direction.South;
+import static com.eit2017.kj.exitguide.Direction.West;
 import static java.lang.Thread.sleep;
 
 public class MapActivity extends Activity implements SensorEventListener {
@@ -37,6 +41,11 @@ public class MapActivity extends Activity implements SensorEventListener {
 
     TextView shortestPathTextView;
 
+    Boolean changeDetected = false;
+
+    Direction doorDirection;
+
+    Graph graph = null;
     TextToSpeech tts_test;
 //    tts_test.setLanguage(Locale.US);
 
@@ -65,7 +74,7 @@ public class MapActivity extends Activity implements SensorEventListener {
             while(true){
                 discoverDevices();
                 try {
-                    sleep(1000);
+                    sleep(6000);
                 }
                 catch (Exception e) {
                 }
@@ -81,7 +90,7 @@ public class MapActivity extends Activity implements SensorEventListener {
             if (BTAdapter.isDiscovering()) {
                 cancelDiscovery();
                 try {
-                    sleep(100);
+                    sleep(600);
                 }
                 catch (Exception e) {
 
@@ -113,8 +122,73 @@ public class MapActivity extends Activity implements SensorEventListener {
                                 });
                     }
 
-//                    tts_test.speak(name, TextToSpeech.QUEUE_ADD, null);
+//                    Placeholder for currentRoom update logic
+//                    TODO: currentRoom update logic implementation and doorDirection update process as a result of currentRoom update
+//                    For now: currentRoom is 8 and next step is 7, which is North,
+//                    so doorDirection is North <--- and this is hardcoded.
+                    {
+                        doorDirection = North;
+                    }
 
+//                    "what should I say?" logic --- when doorDirection and tvDirectionCardinal are
+//                    the same than TTS("forward!"), otherwise tell the corect direction...
+//                    TODO: this is so ugly, think about refactoring for sure.
+                    if (doorDirection == North) {
+                        if (tvDirectionCardinal.getText() == "North") {
+                            tts_test.speak("forward!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "East") {
+                            tts_test.speak("turn left!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "West") {
+                            tts_test.speak("turn right!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "South") {
+                            tts_test.speak("turn back!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                    }
+                    if (doorDirection == East) {
+                        if (tvDirectionCardinal.getText() == "North") {
+                            tts_test.speak("turn right!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "East") {
+                            tts_test.speak("forward!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "West") {
+                            tts_test.speak("turn back!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "South") {
+                            tts_test.speak("turn left!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                    }
+                    if (doorDirection == South) {
+                        if (tvDirectionCardinal.getText() == "North") {
+                            tts_test.speak("turn back!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "East") {
+                            tts_test.speak("turn right!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "West") {
+                            tts_test.speak("turn left!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "South") {
+                            tts_test.speak("forward!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                    }
+                    if (doorDirection == West) {
+                        if (tvDirectionCardinal.getText() == "North") {
+                            tts_test.speak("turn left!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "East") {
+                            tts_test.speak("turn back!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "West") {
+                            tts_test.speak("forward!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                        if (tvDirectionCardinal.getText() == "South") {
+                            tts_test.speak("turn right!", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                    }
                 }
             }
         };
@@ -194,7 +268,7 @@ public class MapActivity extends Activity implements SensorEventListener {
         Thread bluetoothThread = new Thread(runnable);
         bluetoothThread.start();
 
-        Graph graph = new Graph(fpmap);
+        graph = new Graph(fpmap);
         graph.DFS(roomId);
 
         shortestPathTextView.setText("Shortest path is... " + graph.shortestPath.toString());
@@ -335,12 +409,13 @@ public class MapActivity extends Activity implements SensorEventListener {
             printMap(Direction.North);
             tvDirectionCardinal.setText("North");
             if (tts_test != null) {
-//                tts_test.speak("North!", TextToSpeech.QUEUE_ADD, null);
+//                tts_test.speak("North!", TextToSpeech.QUEUE_FLUSH, null);
             }
         }
         else if (degree >=45 && degree <= 135) {
             printMap(Direction.West);
             tvDirectionCardinal.setText("West");
+            changeDetected = true;
             if (tts_test != null) {
 //                tts_test.speak("West!", TextToSpeech.QUEUE_FLUSH, null);
             }
@@ -359,6 +434,12 @@ public class MapActivity extends Activity implements SensorEventListener {
 //                tts_test.speak("East!", TextToSpeech.QUEUE_FLUSH, null);
             }
         }
+
+        // the following lines are just for checking if we can do TTS when currentRoom changes
+//        if (changeDetected == true) {
+//            tts_test.speak(graph.shortestPath.toString(), TextToSpeech.QUEUE_FLUSH, null);
+//            changeDetected = false;
+//        }
     }
 
     @Override
