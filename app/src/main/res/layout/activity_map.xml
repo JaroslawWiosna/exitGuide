@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#87CEFA"
     tools:context="com.eit2017.kj.exitguide.MapActivity">
 
     <TableLayout
@@ -105,6 +106,7 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="8dp"
         android:text="tvDirectionCardinal"
+        android:textColor="#87CEFA"
         app:layout_constraintRight_toRightOf="parent"
         tools:layout_editor_absoluteY="0dp" />
 
@@ -114,6 +116,7 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="8dp"
         android:layout_marginTop="0dp"
+        android:textColor="#87CEFA"
         android:text="shortest path is notknown yet"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
