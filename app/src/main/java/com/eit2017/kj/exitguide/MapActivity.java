@@ -31,26 +31,29 @@ import static java.lang.Thread.sleep;
 
 public class MapActivity extends Activity implements SensorEventListener {
 
+    Boolean roomChanged = false;
+
+    //params to monitor current room
+    int numberOfCurrentRoomInGraph = 0;
+    int numberOfDestinationRoomInGraph = 1;
+    Room currentRoom;
+    Room destinationRoom;
+    Integer roomId;
+    Direction doorDirection;
+    Integer exitRoomId;
+
     //sensors
     private SensorManager mSensorManager;
+    TextToSpeech tts_test;
 
     // ### tvDirection - will be deleted in final version
     TextView tvDirection;
     // ### tvDirectionCardinal - will be deleted in final version
     TextView tvDirectionCardinal;
-
     TextView shortestPathTextView;
 
-    Boolean changeDetected = false;
-
-    Direction doorDirection;
-
     Graph graph = null;
-    TextToSpeech tts_test;
-//    tts_test.setLanguage(Locale.US);
-
-    Integer roomId;
-    Room currentRoom;
+    Map<Integer,Room> fpmap;
 
     ImageView imageCenter;
     ImageView imageFront;
@@ -65,16 +68,16 @@ public class MapActivity extends Activity implements SensorEventListener {
     // Array of displayed rooms around of current room
     ImageView[] surroundings;
 
-    //Bluetooth thread
+    //BLUETOOTH THREAD
     Runnable runnable = new Runnable() {
         private BluetoothAdapter BTAdapter = BluetoothAdapter.getDefaultAdapter();
         public void run() {
             registerReceiver(receiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
 
-            while(true){
+            while(!currentRoom.bluetoothName.equals("BTEXIT")){
                 discoverDevices();
                 try {
-                    sleep(6000);
+                    sleep(4000);
                 }
                 catch (Exception e) {
                 }
@@ -102,6 +105,7 @@ public class MapActivity extends Activity implements SensorEventListener {
         }
 
         private final BroadcastReceiver receiver = new BroadcastReceiver(){
+            int threshold = -90;
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
@@ -122,17 +126,12 @@ public class MapActivity extends Activity implements SensorEventListener {
                                 });
                     }
 
-//                    Placeholder for currentRoom update logic
-//                    TODO: currentRoom update logic implementation and doorDirection update process as a result of currentRoom update
-//                    For now: currentRoom is 8 and next step is 7, which is North,
-//                    so doorDirection is North <--- and this is hardcoded.
-                    {
-                        doorDirection = North;
+                    if ((destinationRoom.bluetoothName.equals(name)) && (rssi < threshold)) {
+                        roomChanged = true;
+                        Toast.makeText(getApplicationContext(), "ROOM CHANGED!", Toast.LENGTH_SHORT).show();
+                        tts_test.speak("Well done you are in the next room", TextToSpeech.QUEUE_FLUSH, null);
                     }
 
-//                    "what should I say?" logic --- when doorDirection and tvDirectionCardinal are
-//                    the same than TTS("forward!"), otherwise tell the corect direction...
-//                    TODO: this is so ugly, think about refactoring for sure.
                     if (doorDirection == North) {
                         if (tvDirectionCardinal.getText() == "North") {
                             tts_test.speak("forward!", TextToSpeech.QUEUE_FLUSH, null);
@@ -208,16 +207,7 @@ public class MapActivity extends Activity implements SensorEventListener {
         tvDirectionCardinal = (TextView) findViewById(R.id.tvDirectionCardinal);
         shortestPathTextView = (TextView) findViewById(R.id.shortestPathTextView);
 
-//        tts_test = new TextToSpeech(getApplicationContext(),
-//                new TextToSpeech.OnInitListener() {
-//                    @Override
-//                    public void onInit(int status) {
-//                        if(status != TextToSpeech.ERROR){
-//                            tts_test.setLanguage(Locale.US);
-//                        }
-//                    }
-//                });
-
+        //map visualisation
         imageCenter  = (ImageView) findViewById(R.id.imageCenter);
         imageFront = (ImageView) findViewById(R.id.imageFront);
         imageBack = (ImageView) findViewById(R.id.imageBack);
@@ -238,26 +228,15 @@ public class MapActivity extends Activity implements SensorEventListener {
         surroundings[6] = imageLeft;
         surroundings[7] = imageFL;
 
-//        Intent i = getIntent();
-////        String tmp = i.getStringExtra("roomID_key");
-//        String tmp = i.getExtras().getString("roomId");
-        Bundle b = getIntent().getExtras();
-        String tmp = b.getString("roomId");
-
-        if (tmp == null) {
-            finish();
-            Toast.makeText(getApplicationContext(),
-                    "roomId is null, and this is a huge problem",
-                    Toast.LENGTH_SHORT).show();
-        }
-
-        roomId = Integer.parseInt(tmp);
-
-//      currentRoom = FloorPlan.getInstance().getRoomMap().get(roomId);
-//      The following 3 lines for debug only...
+        roomId = MainActivity.getStaticRoomId();
         FloorPlan fp = FloorPlan.getInstance();
-        Map<Integer,Room> fpmap = fp.getRoomMap();
-        currentRoom = fpmap.get(roomId);
+        fpmap = fp.getRoomMap();
+
+        graph = new Graph(fpmap);
+        graph.DFS(roomId);
+        exitRoomId = fpmap.size() - 1;
+
+        setCurrentRoom(fpmap.get(roomId));
 
         if (currentRoom == null) {
             finish();
@@ -265,17 +244,16 @@ public class MapActivity extends Activity implements SensorEventListener {
                     "currentRoom is null, and this is a huge problem",
                     Toast.LENGTH_SHORT).show();
         }
-        Thread bluetoothThread = new Thread(runnable);
-        bluetoothThread.start();
 
-        graph = new Graph(fpmap);
-        graph.DFS(roomId);
+        destinationRoom = fpmap.get(graph.shortestPath.get(numberOfDestinationRoomInGraph));
 
         shortestPathTextView.setText("Shortest path is... " + graph.shortestPath.toString());
 
+        Thread bluetoothThread = new Thread(runnable);
+        bluetoothThread.start();
     }
 
-    // Prototyped function for printing the nearest neighbours of current location
+    // Print the nearest neighbours of current location
     private void printMap(Direction dir) {
         int[] centerParams = choosePicture(currentRoom);
         imageCenter.setImageResource(centerParams[0]);
@@ -286,10 +264,18 @@ public class MapActivity extends Activity implements SensorEventListener {
             surroundings[(i*2 + dir.index*2)%8].setImageResource(params[0]);
             surroundings[(i*2 + dir.index*2)%8].setRotation(params[1] + dir.index*90);
 
-            Room nextNeighbour = FloorPlan.getInstance().getRoomMap().get(neighbour.neighbours[(i+1)%4]);
-            int[] nextParams = choosePicture(nextNeighbour);
-            surroundings[(i*2+1 + dir.index*2)%8].setImageResource(nextParams[0]);
-            surroundings[(i*2+1 + dir.index*2)%8].setRotation(nextParams[1] + dir.index*90);
+            if(neighbour != null) {
+                Room nextNeighbour = FloorPlan.getInstance().getRoomMap().get(neighbour.neighbours[(i+1)%4]);
+                int[] nextParams = choosePicture(nextNeighbour);
+                surroundings[(i*2+1 + dir.index*2)%8].setImageResource(nextParams[0]);
+                surroundings[(i*2+1 + dir.index*2)%8].setRotation(nextParams[1] + dir.index*90);
+            }
+            else {
+                int[] nextParams = choosePicture(null);
+                surroundings[(i*2+1 + dir.index*2)%8].setImageResource(nextParams[0]);
+                surroundings[(i*2+1 + dir.index*2)%8].setRotation(nextParams[1] + dir.index*90);
+            }
+
         }
     }
 
@@ -382,7 +368,6 @@ public class MapActivity extends Activity implements SensorEventListener {
     @Override
     protected void onResume() {
         super.onResume();
-
         mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
                 SensorManager.SENSOR_DELAY_GAME);
     }
@@ -390,9 +375,14 @@ public class MapActivity extends Activity implements SensorEventListener {
     @Override
     protected void onPause() {
         super.onPause();
-
         // to stop the listener and save battery
         mSensorManager.unregisterListener(this);
+        try {
+            sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        setCurrentRoom(fpmap.get(graph.shortestPath.get(numberOfCurrentRoomInGraph)));
     }
 
     @Override
@@ -408,38 +398,44 @@ public class MapActivity extends Activity implements SensorEventListener {
         if (degree > 315 || degree < 45) {
             printMap(Direction.North);
             tvDirectionCardinal.setText("North");
-            if (tts_test != null) {
-//                tts_test.speak("North!", TextToSpeech.QUEUE_FLUSH, null);
-            }
         }
         else if (degree >=45 && degree <= 135) {
             printMap(Direction.West);
             tvDirectionCardinal.setText("West");
-            changeDetected = true;
-            if (tts_test != null) {
-//                tts_test.speak("West!", TextToSpeech.QUEUE_FLUSH, null);
-            }
         }
         else if (degree > 135 && degree <= 225) {
             printMap(Direction.South);
             tvDirectionCardinal.setText("South");
-            if (tts_test != null) {
-//                tts_test.speak("South!", TextToSpeech.QUEUE_FLUSH, null);
-            }
         }
         else if (degree > 225 && degree <= 315) {
             printMap(Direction.East);
             tvDirectionCardinal.setText("East");
-            if (tts_test != null) {
-//                tts_test.speak("East!", TextToSpeech.QUEUE_FLUSH, null);
-            }
         }
 
-        // the following lines are just for checking if we can do TTS when currentRoom changes
-//        if (changeDetected == true) {
-//            tts_test.speak(graph.shortestPath.toString(), TextToSpeech.QUEUE_FLUSH, null);
-//            changeDetected = false;
-//        }
+        if (roomChanged) {
+            roomChanged = false;
+            numberOfCurrentRoomInGraph++;
+            numberOfDestinationRoomInGraph++;
+
+            if (graph.shortestPath.get(numberOfCurrentRoomInGraph) == exitRoomId)
+            {
+                tts_test.speak("exit!", TextToSpeech.QUEUE_FLUSH, null);
+                onPause();
+            }
+            else {
+                setCurrentRoom(fpmap.get(graph.shortestPath.get(numberOfCurrentRoomInGraph)));
+                destinationRoom = fpmap.get(graph.shortestPath.get(numberOfDestinationRoomInGraph));
+            }
+        }
+    }
+
+    public void setCurrentRoom(Room nextRoom) {
+        currentRoom = nextRoom;
+        for(int direction = 0; direction < 4; direction++) {
+            if (currentRoom.neighbours[direction] == graph.shortestPath.get(numberOfDestinationRoomInGraph)) {
+                doorDirection = Direction.values()[direction];
+            }
+        }
     }
 
     @Override

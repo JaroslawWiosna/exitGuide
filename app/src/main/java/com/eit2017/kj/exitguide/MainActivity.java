@@ -7,6 +7,7 @@ import android.content.Intent;
 
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -24,10 +25,15 @@ public class MainActivity extends Activity {
     private Button buttonNextStep;
 
     Map<Integer,Room> roomMap;
-    String roomNumber = "8";
-    Integer roomId = 8;
+    String roomNumber;
+    public static Integer staticRoomId = -1;
 
     private final int REQ_CODE_SPEECH_INPUT = 100;
+    TextToSpeech tts_test;
+
+    public static Integer getStaticRoomId() {
+        return staticRoomId;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +46,18 @@ public class MainActivity extends Activity {
         //SpeechRecognition
         buttonSpeak = (Button) findViewById(R.id.buttonSpeak);
         textSpoken = (TextView) findViewById(R.id.textSpoken);
+
+        if (tts_test == null) {
+            tts_test = new TextToSpeech(getApplicationContext(),
+                    new TextToSpeech.OnInitListener() {
+                        @Override
+                        public void onInit(int status) {
+                            if(status != TextToSpeech.ERROR){
+                                tts_test.setLanguage(Locale.US);
+                            }
+                        }
+                    });
+        }
 
         //next step <-- button
         buttonNextStep = (Button) findViewById(R.id.buttonNextStep);
@@ -54,13 +72,12 @@ public class MainActivity extends Activity {
         buttonNextStep.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (roomId != -1) {
+                if (staticRoomId != -1) {
                     Intent i = new Intent(MainActivity.this, MapActivity.class);
-                    i.putExtra("roomId", roomNumber);
                     startActivity(i);
                 }
                 else {
-                    //"WRONG" no such room
+                    tts_test.speak("no such room", TextToSpeech.QUEUE_FLUSH, null);
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.no_such_room),
                             Toast.LENGTH_SHORT).show();
@@ -113,11 +130,18 @@ public class MainActivity extends Activity {
         roomMap = FloorPlan.getInstance().getRoomMap();
         for (Map.Entry<Integer, Room> entry : roomMap.entrySet()) {
             if (entry.getValue().number.equalsIgnoreCase(roomNumber)) {
-                roomId = entry.getValue().id;
+                staticRoomId = entry.getValue().id;
             }
         }
 
-        textSpoken.setText(roomId.toString());
+        if (staticRoomId == -1) {
+            tts_test.speak("no such room", TextToSpeech.QUEUE_FLUSH, null);
+            Toast.makeText(getApplicationContext(),
+                    getString(R.string.no_such_room),
+                    Toast.LENGTH_SHORT).show();
+        }
+
+        textSpoken.setText(staticRoomId.toString());
     }
 
     @Override
