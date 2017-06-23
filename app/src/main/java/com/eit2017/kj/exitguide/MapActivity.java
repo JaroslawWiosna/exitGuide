@@ -105,7 +105,7 @@ public class MapActivity extends Activity implements SensorEventListener {
         }
 
         private final BroadcastReceiver receiver = new BroadcastReceiver(){
-            int threshold = -90;
+            int threshold = -40;
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
@@ -126,7 +126,7 @@ public class MapActivity extends Activity implements SensorEventListener {
                                 });
                     }
 
-                    if ((destinationRoom.bluetoothName.equals(name)) && (rssi < threshold)) {
+                    if ((destinationRoom.bluetoothName.equals(name)) && (rssi > threshold)) {
                         roomChanged = true;
                         Toast.makeText(getApplicationContext(), "ROOM CHANGED!", Toast.LENGTH_SHORT).show();
                         tts_test.speak("Well done you are in the next room", TextToSpeech.QUEUE_FLUSH, null);
@@ -401,7 +401,7 @@ public class MapActivity extends Activity implements SensorEventListener {
         }
         else if (degree >=45 && degree <= 135) {
             printMap(Direction.West);
-            tvDirectionCardinal.setText("West");
+            tvDirectionCardinal.setText("East");
         }
         else if (degree > 135 && degree <= 225) {
             printMap(Direction.South);
@@ -409,7 +409,7 @@ public class MapActivity extends Activity implements SensorEventListener {
         }
         else if (degree > 225 && degree <= 315) {
             printMap(Direction.East);
-            tvDirectionCardinal.setText("East");
+            tvDirectionCardinal.setText("West");
         }
 
         if (roomChanged) {
